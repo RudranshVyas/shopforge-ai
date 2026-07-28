@@ -107,12 +107,26 @@ downloaded in full.
 | `Is the charging speed good?` | aspect question (`charging`) → Gemini |
 | `Show reviews mentioning overheating` | retrieval only — **never** calls the LLM |
 | `How is the camera lens zoom quality` | no aspect evidence → gate blocks LLM → fallback |
+| `Which one is better built?` (compare mode) | dual retrieval → per-side validated citations |
+
+## Comparing two products
+
+Compare mode retrieves for each product separately and asks for a `ProductComparison`
+schema — a verdict plus strengths, weaknesses and citations per side. Two rules carry over
+from the single-product path and one is new:
+
+- The gate requires evidence on **both** sides; if either is weak, no comparison is generated.
+- Each side's citations are validated against **that product's own evidence**, so a review of
+  product A cannot be used to support a claim about product B. If the model tries it, the
+  citation is dropped — and if nothing survives, the whole comparison falls back.
 
 ## API
 
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `POST` | `/api/v1/assistant/query` | main pipeline: answer + citations + agent trace |
+| `POST` | `/api/v1/assistant/compare` | two-product comparison, citations validated per side |
+| `GET` | `/api/v1/products` | most-reviewed products (landing screen) |
 | `GET` | `/api/v1/products/search?q=` | product title search |
 | `GET` | `/api/v1/products/{parent_asin}` | metadata, review count, rating histogram |
 | `GET` | `/api/v1/metrics` | in-memory counters and rates |

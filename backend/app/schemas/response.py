@@ -36,6 +36,27 @@ class QueryResponse(BaseModel):
     fallback_used: bool
 
 
+class ComparisonSideOut(BaseModel):
+    parent_asin: str
+    title: str | None = None
+    strengths: list[str] = []
+    weaknesses: list[str] = []
+    citations: list[ReviewCitation] = []
+    reviews: list[ReviewOut] = []
+
+
+class CompareResponse(BaseModel):
+    response_type: Literal["comparison", "fallback"]
+    verdict: str | None = None
+    product_a: ComparisonSideOut | None = None
+    product_b: ComparisonSideOut | None = None
+    confidence: Literal["high", "medium", "low"] | None = None
+    agent_trace: list[TraceEntry]
+    latency_ms: float
+    llm_called: bool
+    fallback_used: bool
+
+
 class ProductSummary(BaseModel):
     parent_asin: str
     title: str

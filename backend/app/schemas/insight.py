@@ -18,3 +18,17 @@ class ProductInsight(BaseModel):
     recommendation: str
     citations: list[ReviewCitation]
     confidence: Literal["high", "medium", "low"]
+
+
+class ComparisonSide(BaseModel):
+    parent_asin: str
+    strengths: list[str]
+    weaknesses: list[str]
+    citations: list[ReviewCitation]
+
+
+class ProductComparison(BaseModel):
+    verdict: str = Field(description="Which product wins for this question, and why")
+    product_a: ComparisonSide
+    product_b: ComparisonSide
+    confidence: Literal["high", "medium", "low"]

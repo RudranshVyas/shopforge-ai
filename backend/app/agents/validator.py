@@ -26,16 +26,15 @@ def _check(citation: dict, source: dict) -> tuple[bool, str | None]:
     return True, None
 
 
-@timed("Validator")
-def validator(state: WorkflowState) -> WorkflowState:
-    insight = dict(state.get("insight") or {})
-    by_id = {r["review_id"]: r for r in state.get("evidence", [])}
-
+def verify_citations(
+    citations: list[dict], by_id: dict[str, dict]
+) -> tuple[list[dict], list[dict], int]:
+    """Returns (kept, dropped, ratings_corrected). Shared with the comparison workflow."""
     kept: list[dict] = []
     dropped: list[dict] = []
     ratings_fixed = 0
 
-    for citation in insight.get("citations", []):
+    for citation in citations:
         source = by_id.get(citation.get("review_id"))
         if source is None:
             dropped.append({**citation, "reason": "review_id not in evidence"})
@@ -51,6 +50,14 @@ def validator(state: WorkflowState) -> WorkflowState:
         kept.append(citation)
 
     metrics.record_citations(passed=len(kept), dropped=len(dropped))
+    return kept, dropped, ratings_fixed
+
+
+@timed("Validator")
+def validator(state: WorkflowState) -> WorkflowState:
+    insight = dict(state.get("insight") or {})
+    by_id = {r["review_id"]: r for r in state.get("evidence", [])}
+    kept, dropped, ratings_fixed = verify_citations(insight.get("citations", []), by_id)
 
     if not kept:
         return {

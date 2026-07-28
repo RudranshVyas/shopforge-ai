@@ -8,9 +8,10 @@ from functools import lru_cache
 
 from google import genai
 from google.genai import types
+from pydantic import BaseModel
 
 from app.config import settings
-from app.schemas.insight import ProductInsight
+from app.schemas.insight import ProductComparison, ProductInsight
 
 SYSTEM_INSTRUCTION = """You analyse customer reviews for an e-commerce assistant.
 
@@ -38,12 +39,12 @@ def _client() -> genai.Client:
     return genai.Client(api_key=settings.gemini_api_key)
 
 
-def generate_insight(prompt: str) -> ProductInsight:
+def generate_structured(prompt: str, schema: type[BaseModel]) -> BaseModel:
     """One retry, then give up -- the caller falls back to a deterministic response."""
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,
         response_mime_type="application/json",
-        response_schema=ProductInsight,
+        response_schema=schema,
         temperature=0.2,
     )
     last_error: Exception | None = None
@@ -58,3 +59,11 @@ def generate_insight(prompt: str) -> ProductInsight:
         except Exception as exc:  # SDK raises a wide range of transport/quota errors
             last_error = exc
     raise LLMError(str(last_error))
+
+
+def generate_insight(prompt: str) -> ProductInsight:
+    return generate_structured(prompt, ProductInsight)
+
+
+def generate_comparison(prompt: str) -> ProductComparison:
+    return generate_structured(prompt, ProductComparison)

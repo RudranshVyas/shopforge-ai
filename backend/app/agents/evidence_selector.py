@@ -84,12 +84,10 @@ def grade(evidence: list[dict], query_type: str, aspect: str | None) -> Strength
     return "mixed"
 
 
-@timed("EvidenceSelector")
-def evidence_selector(state: WorkflowState) -> WorkflowState:
-    candidates = state.get("candidates", [])
-    aspect = state.get("aspect")
-    query_type = state.get("query_type", "unknown")
-
+def select(
+    candidates: list[dict], query_type: str, aspect: str | None
+) -> tuple[list[dict], Strength, int]:
+    """Shared by the single-product workflow and the comparison workflow."""
     pool = [
         c for c in candidates if len(c["text"]) >= MIN_TEXT_LEN and not _is_generic(c["text"])
     ]
@@ -105,7 +103,16 @@ def evidence_selector(state: WorkflowState) -> WorkflowState:
     picked = _add_rating_diversity(picked, pool)
     picked.sort(key=lambda r: (r["rrf_score"], r["helpful_vote"]), reverse=True)
 
-    strength = grade(picked, query_type, aspect)
+    return picked, grade(picked, query_type, aspect), len(candidates) - len(pool)
+
+
+@timed("EvidenceSelector")
+def evidence_selector(state: WorkflowState) -> WorkflowState:
+    candidates = state.get("candidates", [])
+    aspect = state.get("aspect")
+    query_type = state.get("query_type", "unknown")
+
+    picked, strength, dropped = select(candidates, query_type, aspect)
     return {
         "evidence": picked,
         "strength": strength,
@@ -114,7 +121,7 @@ def evidence_selector(state: WorkflowState) -> WorkflowState:
             f"-> retrieval {strength}",
             "details": {
                 "selected": len(picked),
-                "dropped_short_or_generic": len(candidates) - len(pool),
+                "dropped_short_or_generic": dropped,
                 "strength": strength,
                 "aspect_matches": (
                     sum(1 for r in picked if mentions_aspect(r["text"], aspect)) if aspect else None
