@@ -1,0 +1,29 @@
+# Env
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Data + artifacts (demo corpus is committed, full corpus is not)
+data/processed/*
+!data/processed/.gitkeep
+backend/artifacts/*
+!backend/artifacts/.gitkeep
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

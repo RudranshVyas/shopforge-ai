@@ -1,0 +1,16 @@
+{
+  "battery": ["battery", "batteries", "battery life", "drain", "drains", "draining", "power bank", "mah", "holds a charge", "dies", "died"],
+  "charging": ["charge", "charges", "charging", "charger", "fast charge", "wireless charging", "cable", "cord", "usb-c", "lightning", "port"],
+  "performance": ["performance", "speed", "fast", "slow", "lag", "laggy", "responsive", "overheat", "overheating", "hot", "heats up"],
+  "camera": ["camera", "lens", "photo", "photos", "picture", "pictures", "video quality", "selfie", "zoom"],
+  "display": ["screen", "display", "brightness", "glare", "resolution", "touch", "touchscreen", "protector", "scratch on screen"],
+  "sound": ["sound", "audio", "bass", "volume", "loud", "quiet", "speaker", "speakers", "noise cancel", "noise cancelling", "muffled", "static"],
+  "mic": ["mic", "microphone", "voice", "call quality", "hear me", "muffled voice", "echo"],
+  "durability": ["durable", "durability", "broke", "broken", "cracked", "snapped", "fell apart", "wore out", "frayed", "stopped working", "lasted"],
+  "build_quality": ["build quality", "cheap", "flimsy", "sturdy", "solid", "plastic", "material", "feels cheap", "well made", "craftsmanship"],
+  "compatibility": ["compatible", "compatibility", "fit", "fits", "does not fit", "doesn't fit", "works with", "not work with", "model", "case fit"],
+  "packaging": ["packaging", "package", "box", "boxed", "arrived damaged", "sealed", "wrapping"],
+  "delivery": ["delivery", "shipping", "shipped", "arrived", "arrival", "late", "on time", "prime", "tracking"],
+  "price_value": ["price", "cheap", "expensive", "worth", "worth it", "value", "money", "affordable", "overpriced", "bang for the buck"],
+  "customer_service": ["customer service", "support", "seller", "warranty", "refund", "return", "returned", "replacement", "rma", "contacted"]
+}
