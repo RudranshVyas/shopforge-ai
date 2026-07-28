@@ -17,36 +17,34 @@ export default function QuestionBox({ onAsk, loading }) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5">
+    <div className="paper-card reveal p-6">
+      <p className="field-label mb-1.5">File a query</p>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           ask(question);
         }}
-        className="flex gap-2"
+        className="flex items-end gap-3"
       >
         <input
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="Ask about this product…"
-          className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm outline-none focus:border-slate-900"
+          className="dossier-input"
         />
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-lg bg-slate-900 px-5 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
-        >
+        <button type="submit" disabled={loading} className="btn-stamp">
           {loading ? "Thinking…" : "Ask"}
         </button>
       </form>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        {SUGGESTIONS.map((s) => (
+      <div className="mt-4 flex flex-wrap gap-2">
+        {SUGGESTIONS.map((s, i) => (
           <button
             key={s}
             onClick={() => ask(s)}
             disabled={loading}
-            className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600 hover:border-slate-400 hover:text-slate-900 disabled:opacity-50"
+            className="tag-btn"
+            style={{ transform: `rotate(${[-1, 0.6, -0.4, 1][i % 4]}deg)` }}
           >
             {s}
           </button>

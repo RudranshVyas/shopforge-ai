@@ -1,10 +1,10 @@
 import { useState } from "react";
 import ProductSearch from "./ProductSearch.jsx";
 
-const CONFIDENCE_STYLE = {
-  high: "bg-emerald-100 text-emerald-800",
-  medium: "bg-amber-100 text-amber-800",
-  low: "bg-rose-100 text-rose-800",
+const CONFIDENCE_STAMP = {
+  high: "stamp-high",
+  medium: "stamp-medium",
+  low: "stamp-low",
 };
 
 const SUGGESTIONS = [
@@ -19,42 +19,40 @@ function Side({ side, label }) {
   const open = openIdx === null ? null : side.citations[openIdx];
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <p className="text-xs font-semibold tracking-wide text-slate-400 uppercase">{label}</p>
-      <p className="mt-1 line-clamp-2 text-sm font-medium text-slate-900">
+    <div className="paper-card p-5">
+      <p className="field-label">{label}</p>
+      <p className="mt-1 line-clamp-2 font-display text-base text-ink italic">
         {side.title ?? side.parent_asin}
       </p>
 
-      <p className="mt-3 text-xs font-semibold tracking-wide text-emerald-700 uppercase">
+      <p className="field-label mt-3 flex items-center gap-1.5 text-[color:var(--color-stamp-green)]">
+        <span className="inline-block h-1.5 w-1.5 bg-[color:var(--color-stamp-green)]" />
         Strengths
       </p>
-      <ul className="mt-1 space-y-1 text-sm text-slate-700">
-        {side.strengths.length === 0 && <li className="text-slate-400">—</li>}
+      <ul className="mt-1 space-y-1 text-sm text-ink-soft">
+        {side.strengths.length === 0 && <li className="text-ink-faint">—</li>}
         {side.strengths.map((s, i) => (
-          <li key={i}>+ {s}</li>
+          <li key={i}>{s}</li>
         ))}
       </ul>
 
-      <p className="mt-3 text-xs font-semibold tracking-wide text-rose-700 uppercase">
+      <p className="field-label mt-3 flex items-center gap-1.5 text-[color:var(--color-stamp-red)]">
+        <span className="inline-block h-1.5 w-1.5 bg-[color:var(--color-stamp-red)]" />
         Weaknesses
       </p>
-      <ul className="mt-1 space-y-1 text-sm text-slate-700">
-        {side.weaknesses.length === 0 && <li className="text-slate-400">—</li>}
+      <ul className="mt-1 space-y-1 text-sm text-ink-soft">
+        {side.weaknesses.length === 0 && <li className="text-ink-faint">—</li>}
         {side.weaknesses.map((s, i) => (
-          <li key={i}>− {s}</li>
+          <li key={i}>{s}</li>
         ))}
       </ul>
 
-      <div className="mt-3 flex flex-wrap gap-1.5">
+      <div className="ruled-divider mt-3 flex flex-wrap gap-1.5 pt-3">
         {side.citations.map((c, i) => (
           <button
             key={`${c.review_id}-${i}`}
             onClick={() => setOpenIdx(openIdx === i ? null : i)}
-            className={`rounded-full border px-2 py-0.5 font-mono text-[11px] ${
-              openIdx === i
-                ? "border-slate-900 bg-slate-900 text-white"
-                : "border-slate-200 text-slate-600 hover:border-slate-400"
-            }`}
+            className={`tag-btn ${openIdx === i ? "is-active" : ""}`}
           >
             {c.review_id} ★{c.rating}
           </button>
@@ -62,7 +60,7 @@ function Side({ side, label }) {
       </div>
 
       {open && reviewById[open.review_id] && (
-        <p className="mt-2 rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-700">
+        <p className="mt-2 rounded border border-dashed border-[var(--color-rule)] bg-paper p-3 text-[13px] leading-relaxed text-ink-soft">
           {reviewById[open.review_id].text}
         </p>
       )}
@@ -82,22 +80,20 @@ export default function CompareView({ onResult, loading, result }) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2">
+    <div className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2">
         {[
-          ["Product A", a, setA],
-          ["Product B", b, setB],
+          ["Subject A", a, setA],
+          ["Subject B", b, setB],
         ].map(([label, value, setValue]) => (
-          <div key={label} className="rounded-xl border border-slate-200 bg-white p-4">
-            <p className="text-xs font-semibold tracking-wide text-slate-400 uppercase">
-              {label}
-            </p>
+          <div key={label} className="paper-card p-5">
+            <p className="field-label">{label}</p>
             {value ? (
               <div className="mt-2">
-                <p className="line-clamp-2 text-sm text-slate-800">{value.title}</p>
+                <p className="line-clamp-2 font-display text-sm text-ink italic">{value.title}</p>
                 <button
                   onClick={() => setValue(null)}
-                  className="mt-1 text-xs text-slate-500 underline hover:text-slate-800"
+                  className="field-label mt-1.5 text-stamp-red underline decoration-dashed underline-offset-2"
                 >
                   change
                 </button>
@@ -111,36 +107,34 @@ export default function CompareView({ onResult, loading, result }) {
         ))}
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="paper-card p-6">
+        <p className="field-label mb-1.5">File a comparison query</p>
         <form
           onSubmit={(e) => {
             e.preventDefault();
             ask(question);
           }}
-          className="flex gap-2"
+          className="flex items-end gap-3"
         >
           <input
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder={a && b ? "Ask a comparison question…" : "Pick both products first"}
+            placeholder={a && b ? "Ask a comparison question…" : "Pick both subjects first"}
             disabled={!a || !b}
-            className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm outline-none focus:border-slate-900 disabled:bg-slate-50"
+            className="dossier-input"
           />
-          <button
-            type="submit"
-            disabled={!a || !b || loading}
-            className="rounded-lg bg-slate-900 px-5 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
-          >
+          <button type="submit" disabled={!a || !b || loading} className="btn-stamp">
             {loading ? "Comparing…" : "Compare"}
           </button>
         </form>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {SUGGESTIONS.map((s) => (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {SUGGESTIONS.map((s, i) => (
             <button
               key={s}
               onClick={() => ask(s)}
               disabled={!a || !b || loading}
-              className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600 hover:border-slate-400 hover:text-slate-900 disabled:opacity-50"
+              className="tag-btn"
+              style={{ transform: `rotate(${[-1, 0.6, -0.4][i % 3]}deg)` }}
             >
               {s}
             </button>
@@ -149,30 +143,32 @@ export default function CompareView({ onResult, loading, result }) {
       </div>
 
       {result && result.response_type === "fallback" && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-          <p className="text-sm font-medium text-slate-700">Not enough evidence to compare</p>
-          <p className="mt-1 text-sm text-slate-600">{result.verdict}</p>
-          <p className="mt-2 text-xs text-slate-400">No comparison was generated.</p>
+        <div className="paper-card paper-card--fold reveal overflow-hidden p-6">
+          <div className="flex items-start justify-between gap-4">
+            <p className="field-label">Verdict</p>
+            <span className="stamp-reject stamp-animate shrink-0">Insufficient evidence</span>
+          </div>
+          <p className="lede mt-5 text-[15px] leading-relaxed text-ink">{result.verdict}</p>
+          <p className="field-label mt-4">No comparison was generated.</p>
         </div>
       )}
 
       {result && result.response_type === "comparison" && (
         <>
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="paper-card paper-card--fold reveal p-6">
             <div className="flex items-start justify-between gap-4">
-              <p className="text-sm leading-relaxed text-slate-800">{result.verdict}</p>
+              <p className="field-label">Verdict</p>
               <span
-                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
-                  CONFIDENCE_STYLE[result.confidence] ?? "bg-slate-100 text-slate-700"
-                }`}
+                className={`stamp stamp-animate ${CONFIDENCE_STAMP[result.confidence] ?? ""}`}
               >
                 {result.confidence} confidence
               </span>
             </div>
+            <p className="lede mt-3 text-[15px] leading-relaxed text-ink">{result.verdict}</p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Side side={result.product_a} label="Product A" />
-            <Side side={result.product_b} label="Product B" />
+          <div className="reveal grid gap-4 sm:grid-cols-2">
+            <Side side={result.product_a} label="Subject A" />
+            <Side side={result.product_b} label="Subject B" />
           </div>
         </>
       )}

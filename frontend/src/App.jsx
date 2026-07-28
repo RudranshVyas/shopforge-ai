@@ -57,34 +57,38 @@ export default function App() {
     post("/api/v1/assistant/compare", { query, parent_asin_a, parent_asin_b });
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-6 py-4">
+    <div className="min-h-screen">
+      <div className="folder-strip">
+        <div className="mx-auto max-w-3xl px-6 pt-2">
+          <p className="field-label flex flex-wrap justify-between gap-2 text-ink-faint">
+            <span>ShopForge · Evidence Review Division</span>
+            <span>File No. AR-2023-CPA</span>
+          </p>
+        </div>
+        <div className="mx-auto flex max-w-3xl flex-wrap items-end justify-between gap-4 px-6 pt-2">
           <div>
-            <h1 className="text-lg font-semibold text-slate-900">ShopForge AI</h1>
-            <p className="text-xs text-slate-500">
-              Citation-backed product insights from real Amazon reviews
+            <h1 className="font-display text-[2.15rem] leading-none font-medium text-ink italic">
+              ShopForge
+            </h1>
+            <p className="field-label mt-1.5 text-ink-soft">
+              Product intelligence, verified against the source review
             </p>
           </div>
-          <nav className="flex gap-1 rounded-lg bg-slate-100 p-1">
+          <nav className="-mb-px flex gap-1">
             {MODES.map(([value, label]) => (
               <button
                 key={value}
                 onClick={() => switchMode(value)}
-                className={`rounded-md px-3 py-1.5 text-xs font-medium ${
-                  mode === value
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
+                className={`folder-tab ${mode === value ? "is-active" : ""}`}
               >
                 {label}
               </button>
             ))}
           </nav>
         </div>
-      </header>
+      </div>
 
-      <main className="mx-auto max-w-3xl space-y-4 px-6 py-6">
+      <main className="mx-auto max-w-3xl space-y-5 px-6 py-8">
         {mode === "ask" ? (
           <>
             <ProductSearch onSelect={selectProduct} />
@@ -97,19 +101,30 @@ export default function App() {
         )}
 
         {loading && (
-          <div className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-500">
-            Running pipeline: planner → retriever → evidence selector → validator…
+          <div className="paper-card reveal p-5 font-mono text-xs text-ink-soft">
+            <span className="text-ink">PROCESSING</span> — planner{" "}
+            <span className="text-ink-faint">→</span> retriever{" "}
+            <span className="text-ink-faint">→</span> evidence selector{" "}
+            <span className="text-ink-faint">→</span> validator{" "}
+            <span className="blink-cursor">▮</span>
           </div>
         )}
         {error && (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">
-            {error}
+          <div className="paper-card reveal border-stamp-red/40 p-5 text-sm text-stamp-red">
+            <span className="stamp stamp-low mb-2">Request failed</span>
+            <p className="mt-2 font-mono text-xs">{error}</p>
           </div>
         )}
 
         {mode === "ask" && result && !loading && <AnswerCard result={result} />}
         {result && !loading && <TracePanel result={result} />}
       </main>
+
+      <footer className="mx-auto max-w-3xl px-6 pb-10">
+        <p className="ruled-divider field-label pt-3 text-ink-faint">
+          Amazon Reviews 2023 (McAuley Lab) · Cell Phones &amp; Accessories corpus
+        </p>
+      </footer>
     </div>
   );
 }

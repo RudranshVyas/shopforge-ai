@@ -19,24 +19,21 @@ export default function ProductSearch({ onSelect }) {
 
   return (
     <div>
-      <form onSubmit={search} className="flex gap-2">
+      <p className="field-label mb-1.5">Search the corpus</p>
+      <form onSubmit={search} className="flex items-end gap-3">
         <input
           value={term}
           onChange={(e) => setTerm(e.target.value)}
-          placeholder="Search products — try 'case', 'charger', 'headphones'"
-          className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm outline-none focus:border-slate-900"
+          placeholder="case, charger, headphones…"
+          className="dossier-input"
         />
-        <button
-          type="submit"
-          className="rounded-lg bg-slate-900 px-5 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
-          disabled={searching}
-        >
+        <button type="submit" className="btn-stamp" disabled={searching}>
           {searching ? "Searching…" : "Search"}
         </button>
       </form>
 
       {results.length > 0 && (
-        <ul className="mt-3 divide-y divide-slate-100 rounded-lg border border-slate-200">
+        <ul className="reveal paper-card mt-3 divide-y divide-dashed divide-[var(--color-rule)]">
           {results.map((p) => (
             <li key={p.parent_asin}>
               <button
@@ -44,12 +41,17 @@ export default function ProductSearch({ onSelect }) {
                   onSelect(p);
                   setResults([]);
                 }}
-                className="w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
+                className="group flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-paper"
               >
-                <span className="line-clamp-1 font-medium text-slate-800">{p.title}</span>
-                <span className="text-xs text-slate-500">
-                  ★ {p.average_rating ?? "—"} · {p.rating_number ?? 0} ratings
-                  {p.price ? ` · $${p.price}` : ""}
+                <div className="min-w-0">
+                  <span className="line-clamp-1 text-sm text-ink">{p.title}</span>
+                  <span className="field-label mt-0.5 block normal-case">
+                    ★ {p.average_rating ?? "—"} · {p.rating_number ?? 0} ratings
+                    {p.price ? ` · $${p.price}` : ""}
+                  </span>
+                </div>
+                <span className="field-label shrink-0 text-stamp-red opacity-0 transition-opacity group-hover:opacity-100">
+                  Open →
                 </span>
               </button>
             </li>

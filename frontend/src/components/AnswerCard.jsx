@@ -1,9 +1,9 @@
 import { useState } from "react";
 
-const CONFIDENCE_STYLE = {
-  high: "bg-emerald-100 text-emerald-800",
-  medium: "bg-amber-100 text-amber-800",
-  low: "bg-rose-100 text-rose-800",
+const CONFIDENCE_STAMP = {
+  high: "stamp-high",
+  medium: "stamp-medium",
+  low: "stamp-low",
 };
 
 function Highlighted({ text, quote }) {
@@ -12,7 +12,7 @@ function Highlighted({ text, quote }) {
   return (
     <span>
       {text.slice(0, at)}
-      <mark className="bg-amber-200">{text.slice(at, at + quote.length)}</mark>
+      <mark className="evidence-mark">{text.slice(at, at + quote.length)}</mark>
       {text.slice(at + quote.length)}
     </span>
   );
@@ -20,8 +20,8 @@ function Highlighted({ text, quote }) {
 
 function ReviewBody({ review, quote }) {
   return (
-    <div className="mt-2 rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-700">
-      <p className="mb-1 font-medium text-slate-900">
+    <div className="mt-2 rounded border border-dashed border-[var(--color-rule)] bg-paper p-3 font-body text-[13px] leading-relaxed text-ink-soft">
+      <p className="field-label mb-1.5 normal-case">
         {review.title || "(no title)"} — ★{review.rating} · {review.helpful_vote} helpful
       </p>
       <Highlighted text={review.text} quote={quote} />
@@ -37,21 +37,25 @@ export default function AnswerCard({ result }) {
 
   if (result.response_type === "fallback") {
     return (
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-        <p className="text-sm font-medium text-slate-700">Not enough evidence</p>
-        <p className="mt-1 text-sm text-slate-600">{result.answer}</p>
-        <p className="mt-2 text-xs text-slate-400">No LLM call was made.</p>
+      <div className="paper-card paper-card--fold reveal overflow-hidden p-6">
+        <div className="flex items-start justify-between gap-4">
+          <p className="field-label">Field report</p>
+          <span className="stamp-reject stamp-animate shrink-0">Insufficient evidence</span>
+        </div>
+        <p className="lede mt-5 font-body text-[15px] leading-relaxed text-ink">{result.answer}</p>
+        <p className="field-label mt-4">No model was consulted for this response.</p>
       </div>
     );
   }
 
   if (result.response_type === "retrieval_only") {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
-        <p className="text-sm font-medium text-slate-900">
+      <div className="paper-card paper-card--fold reveal p-6">
+        <p className="field-label mb-1">Exhibits on file</p>
+        <p className="font-display text-lg text-ink italic">
           {result.reviews.length} matching reviews
         </p>
-        <div className="mt-3 space-y-2">
+        <div className="ruled-divider mt-3 space-y-2 pt-3">
           {result.reviews.map((r) => (
             <ReviewBody key={r.review_id} review={r} />
           ))}
@@ -61,60 +65,56 @@ export default function AnswerCard({ result }) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5">
+    <div className="paper-card paper-card--fold reveal p-6">
       <div className="flex items-start justify-between gap-4">
-        <p className="text-sm leading-relaxed text-slate-800">{result.answer}</p>
-        <span
-          className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
-            CONFIDENCE_STYLE[result.confidence] ?? "bg-slate-100 text-slate-700"
-          }`}
-        >
+        <p className="field-label">Field report</p>
+        <span className={`stamp stamp-animate ${CONFIDENCE_STAMP[result.confidence] ?? ""}`}>
           {result.confidence} confidence
         </span>
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <p className="lede mt-3 font-body text-[15px] leading-relaxed text-ink">{result.answer}</p>
+
+      <div className="ruled-divider mt-5 grid gap-5 pt-5 sm:grid-cols-2">
         <div>
-          <p className="text-xs font-semibold tracking-wide text-emerald-700 uppercase">
-            What works
+          <p className="field-label mb-1.5 flex items-center gap-1.5 text-[color:var(--color-stamp-green)]">
+            <span className="inline-block h-2 w-2 bg-[color:var(--color-stamp-green)]" />
+            Exhibit: strengths
           </p>
-          <ul className="mt-1 space-y-1 text-sm text-slate-700">
+          <ul className="space-y-1 text-sm text-ink-soft">
             {result.positives.map((item, i) => (
-              <li key={i}>+ {item}</li>
+              <li key={i}>{item}</li>
             ))}
           </ul>
         </div>
         <div>
-          <p className="text-xs font-semibold tracking-wide text-rose-700 uppercase">Complaints</p>
-          <ul className="mt-1 space-y-1 text-sm text-slate-700">
+          <p className="field-label mb-1.5 flex items-center gap-1.5 text-[color:var(--color-stamp-red)]">
+            <span className="inline-block h-2 w-2 bg-[color:var(--color-stamp-red)]" />
+            Exhibit: weaknesses
+          </p>
+          <ul className="space-y-1 text-sm text-ink-soft">
             {result.complaints.map((item, i) => (
-              <li key={i}>− {item}</li>
+              <li key={i}>{item}</li>
             ))}
           </ul>
         </div>
       </div>
 
       {result.recommendation && (
-        <p className="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-700">
-          <span className="font-medium">Recommendation: </span>
+        <p className="ruled-divider mt-5 pt-4 text-sm text-ink-soft">
+          <span className="field-label mr-2 text-ink">Field recommendation —</span>
           {result.recommendation}
         </p>
       )}
 
-      <div className="mt-4">
-        <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-          Verified citations ({result.citations.length})
-        </p>
-        <div className="mt-2 flex flex-wrap gap-2">
+      <div className="ruled-divider mt-5 pt-4">
+        <p className="field-label mb-2">Verified citations ({result.citations.length})</p>
+        <div className="flex flex-wrap gap-2">
           {result.citations.map((c, i) => (
             <button
               key={`${c.review_id}-${i}`}
               onClick={() => setOpenIdx(openIdx === i ? null : i)}
-              className={`rounded-full border px-3 py-1 font-mono text-xs ${
-                openIdx === i
-                  ? "border-slate-900 bg-slate-900 text-white"
-                  : "border-slate-200 text-slate-600 hover:border-slate-400"
-              }`}
+              className={`tag-btn ${openIdx === i ? "is-active" : ""}`}
             >
               {c.review_id} ★{c.rating}
             </button>
