@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# Bootstrap script for a fresh Ubuntu 22.04 EC2 instance (t2.micro / t3.micro,
-# free tier). Run as the default `ubuntu` user via SSH:
+# Bootstrap script for a fresh Ubuntu EC2 instance (t2.micro / t3.micro, free
+# tier). Uses `uv` to get an isolated Python 3.11 rather than assuming the
+# distro packages one -- requirements.txt pins cp311 wheels (faiss-cpu,
+# pydantic-core), and the OS default python3 can be newer than those support.
+# Run as the default `ubuntu` user via SSH:
 #
 #   scp deploy/setup_ec2.sh ubuntu@<EC2_PUBLIC_IP>:~
 #   ssh ubuntu@<EC2_PUBLIC_IP> 'chmod +x setup_ec2.sh && ./setup_ec2.sh'
@@ -21,7 +24,17 @@ sudo sysctl vm.swappiness=10 || true
 
 echo "[2/6] System packages"
 sudo apt-get update -y
-sudo apt-get install -y python3.11 python3.11-venv git nginx nodejs npm
+sudo apt-get install -y git nginx nodejs npm curl
+
+# requirements.txt pins cp311 wheels (faiss-cpu, pydantic-core, etc). Rather than
+# assume the distro ships a python3.11 package -- it may not, and the default
+# python3 can be newer than any of those wheels support -- pull an isolated
+# 3.11 via uv, independent of the OS package set.
+if ! command -v uv >/dev/null 2>&1; then
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+fi
+export PATH="$HOME/.local/bin:$PATH"
+uv python install 3.11
 
 echo "[3/6] Clone repo"
 if [ ! -d shopforge-ai ]; then
@@ -31,9 +44,8 @@ cd shopforge-ai
 
 echo "[4/6] Backend venv + deps"
 cd backend
-python3.11 -m venv .venv
-.venv/bin/pip install --upgrade pip
-.venv/bin/pip install -r requirements.txt
+uv venv --python 3.11 .venv
+uv pip install --python .venv/bin/python -r requirements.txt
 cd ..
 
 echo "[5/6] Frontend build (static, served by nginx -- no node process at runtime)"
