@@ -5,7 +5,10 @@ def test_battery_query_returns_relevant_hits(store):
     hits = store.search("battery drains fast", top_k=12)
     assert len(hits) >= 5
     for hit in hits[:5]:
-        assert any(term in hit.text.lower() for term in BATTERY_TERMS), hit.text[:120]
+        # The corpus is indexed on title + text (see index_store/build_index), so a
+        # match can legitimately live in the title alone.
+        haystack = f"{hit.title} {hit.text}".lower()
+        assert any(term in haystack for term in BATTERY_TERMS), haystack[:160]
 
 
 def test_product_filter_restricts_results(store):
