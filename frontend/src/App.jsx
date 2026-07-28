@@ -60,10 +60,7 @@ export default function App() {
     <div className="min-h-screen">
       <div className="folder-strip">
         <div className="mx-auto max-w-3xl px-6 pt-2">
-          <p className="field-label flex flex-wrap justify-between gap-2 text-ink-faint">
-            <span>ShopForge · Evidence Review Division</span>
-            <span>File No. AR-2023-CPA</span>
-          </p>
+          <p className="field-label text-ink-faint">ShopForge · Evidence Review Division</p>
         </div>
         <div className="mx-auto flex max-w-3xl flex-wrap items-end justify-between gap-4 px-6 pt-2">
           <div>
