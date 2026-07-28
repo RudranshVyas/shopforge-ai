@@ -9,8 +9,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=REPO_ROOT / ".env", extra="ignore")
 
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.0-flash"
+    gemini_model: str = "gemini-flash-latest"
     frontend_origin: str = "http://localhost:5173"
+    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
 
     data_dir: Path = REPO_ROOT / "data"
     artifacts_dir: Path = REPO_ROOT / "backend" / "artifacts"
