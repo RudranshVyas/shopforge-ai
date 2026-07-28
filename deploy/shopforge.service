@@ -1,0 +1,16 @@
+[Unit]
+Description=ShopForge AI backend (uvicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/shopforge-ai/backend
+# Single worker: 1GB RAM has no headroom for more than one torch/FAISS process.
+ExecStart=/home/ubuntu/shopforge-ai/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
+Restart=on-failure
+RestartSec=5
+EnvironmentFile=/home/ubuntu/shopforge-ai/.env
+
+[Install]
+WantedBy=multi-user.target
