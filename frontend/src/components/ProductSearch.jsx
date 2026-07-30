@@ -19,21 +19,20 @@ export default function ProductSearch({ onSelect }) {
 
   return (
     <div>
-      <p className="field-label mb-1.5">Search the corpus</p>
-      <form onSubmit={search} className="flex items-end gap-3">
+      <form onSubmit={search} className="flex items-center gap-2.5">
         <input
           value={term}
           onChange={(e) => setTerm(e.target.value)}
-          placeholder="case, charger, headphones…"
-          className="dossier-input"
+          placeholder="Search products — case, charger, headphones…"
+          className="field"
         />
-        <button type="submit" className="btn-stamp" disabled={searching}>
+        <button type="submit" className="btn" disabled={searching}>
           {searching ? "Searching…" : "Search"}
         </button>
       </form>
 
       {results.length > 0 && (
-        <ul className="reveal paper-card mt-3 divide-y divide-dashed divide-[var(--color-rule)]">
+        <ul className="card reveal mt-3 overflow-hidden p-1.5">
           {results.map((p) => (
             <li key={p.parent_asin}>
               <button
@@ -41,16 +40,16 @@ export default function ProductSearch({ onSelect }) {
                   onSelect(p);
                   setResults([]);
                 }}
-                className="group flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-paper"
+                className="group flex w-full items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left transition-colors hover:bg-card-sunk"
               >
-                <div className="min-w-0">
+                <span className="min-w-0">
                   <span className="line-clamp-1 text-sm text-ink">{p.title}</span>
-                  <span className="field-label mt-0.5 block normal-case">
+                  <span className="label mt-0.5 block">
                     ★ {p.average_rating ?? "—"} · {p.rating_number ?? 0} ratings
                     {p.price ? ` · $${p.price}` : ""}
                   </span>
-                </div>
-                <span className="field-label shrink-0 text-stamp-red opacity-0 transition-opacity group-hover:opacity-100">
+                </span>
+                <span className="label shrink-0 text-clay opacity-0 transition-opacity group-hover:opacity-100">
                   Open →
                 </span>
               </button>

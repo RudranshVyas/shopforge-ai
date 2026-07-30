@@ -8,8 +8,8 @@ import QuestionBox from "./components/QuestionBox.jsx";
 import TracePanel from "./components/TracePanel.jsx";
 
 const MODES = [
-  ["ask", "Ask about a product"],
-  ["compare", "Compare two products"],
+  ["ask", "Ask"],
+  ["compare", "Compare"],
 ];
 
 export default function App() {
@@ -58,34 +58,31 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
-      <div className="folder-strip">
-        <div className="mx-auto max-w-3xl px-6 pt-2">
-          <p className="field-label text-ink-faint">ShopForge · Evidence Review Division</p>
-        </div>
-        <div className="mx-auto flex max-w-3xl flex-wrap items-end justify-between gap-4 px-6 pt-2">
+      <header className="mx-auto max-w-3xl px-6 pt-9 pb-5">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-[2.15rem] leading-none font-medium text-ink italic">
+            <h1 className="font-display text-[2.4rem] leading-none font-medium text-ink italic">
               ShopForge
             </h1>
-            <p className="field-label mt-1.5 text-ink-soft">
-              Product intelligence, verified against the source review
+            <p className="mt-2 text-sm text-ink-soft">
+              Product answers you can trace back to the review they came from
             </p>
           </div>
-          <nav className="-mb-px flex gap-1">
+          <nav className="tabs">
             {MODES.map(([value, label]) => (
               <button
                 key={value}
                 onClick={() => switchMode(value)}
-                className={`folder-tab ${mode === value ? "is-active" : ""}`}
+                className={`tab ${mode === value ? "is-active" : ""}`}
               >
                 {label}
               </button>
             ))}
           </nav>
         </div>
-      </div>
+      </header>
 
-      <main className="mx-auto max-w-3xl space-y-5 px-6 py-8">
+      <main className="mx-auto max-w-3xl space-y-5 px-6 pb-10">
         {mode === "ask" ? (
           <>
             <ProductSearch onSelect={selectProduct} />
@@ -98,18 +95,17 @@ export default function App() {
         )}
 
         {loading && (
-          <div className="paper-card reveal p-5 font-mono text-xs text-ink-soft">
-            <span className="text-ink">PROCESSING</span> — planner{" "}
-            <span className="text-ink-faint">→</span> retriever{" "}
-            <span className="text-ink-faint">→</span> evidence selector{" "}
-            <span className="text-ink-faint">→</span> validator{" "}
-            <span className="blink-cursor">▮</span>
+          <div className="card reveal flex items-center gap-3 p-6">
+            <span className="pulse-dot h-2 w-2 shrink-0 rounded-full bg-clay" />
+            <p className="text-sm text-ink-soft italic">
+              Retrieving evidence, then deciding whether it's strong enough to answer…
+            </p>
           </div>
         )}
         {error && (
-          <div className="paper-card reveal border-stamp-red/40 p-5 text-sm text-stamp-red">
-            <span className="stamp stamp-low mb-2">Request failed</span>
-            <p className="mt-2 font-mono text-xs">{error}</p>
+          <div className="card reveal p-6">
+            <span className="stamp stamp-low">Request failed</span>
+            <p className="mt-3 font-mono text-xs text-ink-soft">{error}</p>
           </div>
         )}
 
@@ -118,8 +114,9 @@ export default function App() {
       </main>
 
       <footer className="mx-auto max-w-3xl px-6 pb-10">
-        <p className="ruled-divider field-label pt-3 text-ink-faint">
-          Amazon Reviews 2023 (McAuley Lab) · Cell Phones &amp; Accessories corpus
+        <hr className="hairline" />
+        <p className="label mt-4 text-center">
+          Amazon Reviews 2023 · Cell Phones &amp; Accessories
         </p>
       </footer>
     </div>

@@ -17,35 +17,28 @@ export default function QuestionBox({ onAsk, loading }) {
   }
 
   return (
-    <div className="paper-card reveal p-6">
-      <p className="field-label mb-1.5">File a query</p>
+    <div className="card p-7">
       <form
         onSubmit={(e) => {
           e.preventDefault();
           ask(question);
         }}
-        className="flex items-end gap-3"
+        className="flex items-center gap-2.5"
       >
         <input
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask about this product…"
-          className="dossier-input"
+          placeholder="Ask anything about this product…"
+          className="field"
         />
-        <button type="submit" disabled={loading} className="btn-stamp">
+        <button type="submit" disabled={loading} className="btn">
           {loading ? "Thinking…" : "Ask"}
         </button>
       </form>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {SUGGESTIONS.map((s, i) => (
-          <button
-            key={s}
-            onClick={() => ask(s)}
-            disabled={loading}
-            className="tag-btn"
-            style={{ transform: `rotate(${[-1, 0.6, -0.4, 1][i % 4]}deg)` }}
-          >
+        {SUGGESTIONS.map((s) => (
+          <button key={s} onClick={() => ask(s)} disabled={loading} className="chip">
             {s}
           </button>
         ))}

@@ -20,9 +20,9 @@ function Highlighted({ text, quote }) {
 
 function ReviewBody({ review, quote }) {
   return (
-    <div className="mt-2 rounded border border-dashed border-[var(--color-rule)] bg-paper p-3 font-body text-[13px] leading-relaxed text-ink-soft">
-      <p className="field-label mb-1.5 normal-case">
-        {review.title || "(no title)"} — ★{review.rating} · {review.helpful_vote} helpful
+    <div className="card-sunk reveal mt-3 p-4 text-[13.5px] leading-relaxed text-ink-soft">
+      <p className="label mb-1.5 text-ink">
+        {review.title || "(no title)"} · ★{review.rating} · {review.helpful_vote} helpful
       </p>
       <Highlighted text={review.text} quote={quote} />
     </div>
@@ -37,25 +37,25 @@ export default function AnswerCard({ result }) {
 
   if (result.response_type === "fallback") {
     return (
-      <div className="paper-card paper-card--fold reveal overflow-hidden p-6">
+      <div className="card reveal p-7">
         <div className="flex items-start justify-between gap-4">
-          <p className="field-label">Field report</p>
-          <span className="stamp-reject stamp-animate shrink-0">Insufficient evidence</span>
+          <p className="label-caps">Answer</p>
+          <span className="stamp-reject stamp-animate shrink-0">Not enough evidence</span>
         </div>
-        <p className="lede mt-5 font-body text-[15px] leading-relaxed text-ink">{result.answer}</p>
-        <p className="field-label mt-4">No model was consulted for this response.</p>
+        <p className="lede mt-5 text-[15px] leading-relaxed text-ink">{result.answer}</p>
+        <p className="label mt-5">The model was never called for this one.</p>
       </div>
     );
   }
 
   if (result.response_type === "retrieval_only") {
     return (
-      <div className="paper-card paper-card--fold reveal p-6">
-        <p className="field-label mb-1">Exhibits on file</p>
-        <p className="font-display text-lg text-ink italic">
-          {result.reviews.length} matching reviews
+      <div className="card reveal p-7">
+        <p className="label-caps">Matching reviews</p>
+        <p className="mt-1.5 font-display text-xl text-ink italic">
+          {result.reviews.length} found
         </p>
-        <div className="ruled-divider mt-3 space-y-2 pt-3">
+        <div className="mt-4 space-y-2.5">
           {result.reviews.map((r) => (
             <ReviewBody key={r.review_id} review={r} />
           ))}
@@ -65,34 +65,36 @@ export default function AnswerCard({ result }) {
   }
 
   return (
-    <div className="paper-card paper-card--fold reveal p-6">
+    <div className="card reveal p-7">
       <div className="flex items-start justify-between gap-4">
-        <p className="field-label">Field report</p>
-        <span className={`stamp stamp-animate ${CONFIDENCE_STAMP[result.confidence] ?? ""}`}>
+        <p className="label-caps">Answer</p>
+        <span className={`stamp stamp-animate shrink-0 ${CONFIDENCE_STAMP[result.confidence] ?? ""}`}>
           {result.confidence} confidence
         </span>
       </div>
 
-      <p className="lede mt-3 font-body text-[15px] leading-relaxed text-ink">{result.answer}</p>
+      <p className="lede mt-4 text-[15.5px] leading-relaxed text-ink">{result.answer}</p>
 
-      <div className="ruled-divider mt-5 grid gap-5 pt-5 sm:grid-cols-2">
+      <hr className="hairline my-6" />
+
+      <div className="grid gap-6 sm:grid-cols-2">
         <div>
-          <p className="field-label mb-1.5 flex items-center gap-1.5 text-[color:var(--color-stamp-green)]">
-            <span className="inline-block h-2 w-2 bg-[color:var(--color-stamp-green)]" />
-            Exhibit: strengths
+          <p className="label-caps mb-2 flex items-center gap-2 text-[color:var(--color-moss)]">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--color-moss)]" />
+            What works
           </p>
-          <ul className="space-y-1 text-sm text-ink-soft">
+          <ul className="space-y-1.5 text-sm leading-relaxed text-ink-soft">
             {result.positives.map((item, i) => (
               <li key={i}>{item}</li>
             ))}
           </ul>
         </div>
         <div>
-          <p className="field-label mb-1.5 flex items-center gap-1.5 text-[color:var(--color-stamp-red)]">
-            <span className="inline-block h-2 w-2 bg-[color:var(--color-stamp-red)]" />
-            Exhibit: weaknesses
+          <p className="label-caps mb-2 flex items-center gap-2 text-[color:var(--color-clay)]">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--color-clay)]" />
+            What doesn't
           </p>
-          <ul className="space-y-1 text-sm text-ink-soft">
+          <ul className="space-y-1.5 text-sm leading-relaxed text-ink-soft">
             {result.complaints.map((item, i) => (
               <li key={i}>{item}</li>
             ))}
@@ -101,32 +103,37 @@ export default function AnswerCard({ result }) {
       </div>
 
       {result.recommendation && (
-        <p className="ruled-divider mt-5 pt-4 text-sm text-ink-soft">
-          <span className="field-label mr-2 text-ink">Field recommendation —</span>
-          {result.recommendation}
-        </p>
+        <>
+          <hr className="hairline my-6" />
+          <p className="text-sm leading-relaxed text-ink-soft">
+            <span className="label-caps mr-2 text-ink">Verdict</span>
+            {result.recommendation}
+          </p>
+        </>
       )}
 
-      <div className="ruled-divider mt-5 pt-4">
-        <p className="field-label mb-2">Verified citations ({result.citations.length})</p>
-        <div className="flex flex-wrap gap-2">
-          {result.citations.map((c, i) => (
-            <button
-              key={`${c.review_id}-${i}`}
-              onClick={() => setOpenIdx(openIdx === i ? null : i)}
-              className={`tag-btn ${openIdx === i ? "is-active" : ""}`}
-            >
-              {c.review_id} ★{c.rating}
-            </button>
-          ))}
-        </div>
-        {openIdx !== null && reviewById[result.citations[openIdx].review_id] && (
-          <ReviewBody
-            review={reviewById[result.citations[openIdx].review_id]}
-            quote={result.citations[openIdx].quote}
-          />
-        )}
+      <hr className="hairline my-6" />
+
+      <p className="label-caps mb-2.5">
+        Verified citations · {result.citations.length}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {result.citations.map((c, i) => (
+          <button
+            key={`${c.review_id}-${i}`}
+            onClick={() => setOpenIdx(openIdx === i ? null : i)}
+            className={`tag ${openIdx === i ? "is-active" : ""}`}
+          >
+            {c.review_id} ★{c.rating}
+          </button>
+        ))}
       </div>
+      {openIdx !== null && reviewById[result.citations[openIdx].review_id] && (
+        <ReviewBody
+          review={reviewById[result.citations[openIdx].review_id]}
+          quote={result.citations[openIdx].quote}
+        />
+      )}
     </div>
   );
 }

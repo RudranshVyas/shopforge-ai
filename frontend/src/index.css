@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -6,16 +6,23 @@
   --font-body: "Newsreader", "Iowan Old Style", Georgia, serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 
-  --color-paper: #f1ebda;
-  --color-paper-raised: #faf7ec;
-  --color-folder: #e5d9b3;
-  --color-ink: #211d13;
-  --color-ink-soft: #6b6350;
-  --color-ink-faint: #9c9278;
-  --color-rule: #c8b98c;
-  --color-stamp-red: #96281b;
-  --color-stamp-green: #33562f;
-  --color-stamp-amber: #9c6b1f;
+  /* Warm, soft ground -- less "manila folder", more "sunlit paper" */
+  --color-shell: #f6f1e8;
+  --color-shell-deep: #efe6d8;
+  --color-card: #fffdf9;
+  --color-card-sunk: #f7f2e9;
+
+  --color-ink: #2a241c;
+  --color-ink-soft: #6f6555;
+  --color-ink-faint: #a1968180;
+
+  --color-line: #e6dbc9;
+  --color-line-soft: #efe7da;
+
+  --color-clay: #b04a34;
+  --color-clay-deep: #8f3826;
+  --color-moss: #4a6b45;
+  --color-honey: #b3792a;
 }
 
 html {
@@ -23,58 +30,73 @@ html {
 }
 
 body {
-  background-color: var(--color-paper);
+  min-height: 100vh;
   color: var(--color-ink);
   font-family: var(--font-body);
+  background-color: var(--color-shell);
+  /* Layered warm light instead of one flat fill -- gives the page depth
+     without any image asset. */
+  background-image:
+    radial-gradient(
+      ellipse 90% 55% at 12% -10%,
+      color-mix(in srgb, var(--color-honey) 13%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 70% 50% at 92% 4%,
+      color-mix(in srgb, var(--color-clay) 10%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(178deg, var(--color-shell) 0%, var(--color-shell-deep) 100%);
+  background-attachment: fixed;
 }
 
-#root {
-  position: relative;
-  isolation: isolate;
-}
-
-/* Grain overlay: sits above everything, blends with what's underneath so the
-   whole viewport reads as one scanned sheet rather than flat vector cards. */
+/* Very fine grain, kept far subtler than before so it reads as texture,
+   not noise. */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 50;
   pointer-events: none;
-  opacity: 0.05;
+  opacity: 0.025;
   mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--color-stamp-red) 25%, transparent);
-  color: var(--color-ink);
+  background: color-mix(in srgb, var(--color-clay) 22%, transparent);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-stamp-red);
-  outline-offset: 2px;
+  outline: 2px solid var(--color-clay);
+  outline-offset: 3px;
+  border-radius: 12px;
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 11px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-paper);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-rule);
-  border-radius: 5px;
-  border: 2px solid var(--color-paper);
+  background: color-mix(in srgb, var(--color-ink-soft) 28%, transparent);
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-ink-soft) 45%, transparent);
+  background-clip: content-box;
 }
 
-/* ---- Reveal / stamp motion ---- */
+/* ---------- Motion ---------- */
 
-@keyframes fade-rise {
+@keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(14px) scale(0.99);
   }
   to {
     opacity: 1;
@@ -82,268 +104,377 @@ body::before {
   }
 }
 .reveal {
-  animation: fade-rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: rise 0.55s cubic-bezier(0.22, 0.68, 0.24, 1) both;
 }
 
-@keyframes stamp-down {
+@keyframes press-in {
   0% {
     opacity: 0;
-    transform: rotate(-4deg) scale(2.3);
+    transform: rotate(-3deg) scale(1.7);
   }
-  55% {
+  60% {
     opacity: 1;
-    transform: rotate(-4deg) scale(0.92);
+    transform: rotate(-3deg) scale(0.95);
   }
   100% {
     opacity: 1;
-    transform: rotate(-4deg) scale(1);
+    transform: rotate(-3deg) scale(1);
   }
 }
 .stamp-animate {
-  animation: stamp-down 0.55s cubic-bezier(0.25, 0.8, 0.3, 1.35) both;
+  animation: press-in 0.5s cubic-bezier(0.3, 0.8, 0.35, 1.3) both;
 }
 
-@keyframes blink {
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
   50% {
-    opacity: 0;
+    opacity: 1;
   }
 }
-.blink-cursor {
-  animation: blink 1s step-end infinite;
+.pulse-dot {
+  animation: pulse-soft 1.3s ease-in-out infinite;
 }
 
-/* ---- Paper surfaces ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
-.paper-card {
+/* ---------- Surfaces ---------- */
+
+.card {
   position: relative;
-  background: var(--color-paper-raised);
-  border: 1px solid var(--color-rule);
-  border-radius: 4px;
+  background: var(--color-card);
+  border: 1px solid var(--color-line-soft);
+  border-radius: 22px;
   box-shadow:
-    0 1px 0 rgba(32, 28, 18, 0.05),
-    0 16px 30px -22px rgba(32, 28, 18, 0.55);
+    0 1px 2px rgba(42, 36, 28, 0.03),
+    0 8px 20px -14px rgba(42, 36, 28, 0.22),
+    0 28px 50px -34px rgba(42, 36, 28, 0.3);
+  transition:
+    transform 0.35s cubic-bezier(0.22, 0.68, 0.24, 1),
+    box-shadow 0.35s cubic-bezier(0.22, 0.68, 0.24, 1);
 }
 
-.paper-card--fold::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 0 18px 18px 0;
-  border-color: transparent var(--color-folder) transparent transparent;
-  border-top-right-radius: 4px;
-  filter: drop-shadow(-1px 1px 1px rgba(32, 28, 18, 0.3));
-  pointer-events: none;
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 2px 4px rgba(42, 36, 28, 0.04),
+    0 14px 28px -14px rgba(42, 36, 28, 0.26),
+    0 40px 64px -38px rgba(42, 36, 28, 0.34);
 }
 
-.ruled-divider {
-  border-top: 1px dashed var(--color-rule);
+.card-sunk {
+  background: var(--color-card-sunk);
+  border: 1px solid var(--color-line-soft);
+  border-radius: 16px;
 }
 
-/* ---- Type helpers ---- */
+.hairline {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-line) 12%,
+    var(--color-line) 88%,
+    transparent
+  );
+  border: 0;
+}
+
+/* ---------- Type ---------- */
+
+/* Softer than the old all-caps mono: sentence case, gentler tracking. */
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+  color: var(--color-ink-soft);
+  opacity: 0.85;
+}
+
+.label-caps {
+  font-family: var(--font-mono);
+  font-size: 0.63rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  opacity: 0.75;
+}
 
 .lede::first-letter {
   font-family: var(--font-display);
   font-style: italic;
   font-weight: 600;
-  font-size: 2.6em;
-  line-height: 0.75;
+  font-size: 2.9em;
+  line-height: 0.76;
   float: left;
-  margin: 0.03em 0.08em 0 0;
-  color: var(--color-stamp-red);
+  margin: 0.04em 0.09em 0 0;
+  color: var(--color-clay);
 }
 
 mark.evidence-mark {
   background: linear-gradient(
-    100deg,
+    102deg,
     transparent 0%,
-    color-mix(in srgb, var(--color-stamp-amber) 55%, transparent) 12%,
-    color-mix(in srgb, var(--color-stamp-amber) 55%, transparent) 88%,
+    color-mix(in srgb, var(--color-honey) 42%, transparent) 8%,
+    color-mix(in srgb, var(--color-honey) 42%, transparent) 92%,
     transparent 100%
   );
-  padding: 0.05em 0.2em;
-  border-radius: 2px;
+  padding: 0.1em 0.3em;
+  border-radius: 6px;
   color: inherit;
+  font-weight: 500;
 }
 
-/* ---- Form controls ---- */
+/* ---------- Controls ---------- */
 
-.dossier-input {
+.field {
   width: 100%;
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid var(--color-rule);
-  padding: 0.55rem 0.15rem;
+  background: var(--color-card-sunk);
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  padding: 0.7rem 1.2rem;
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: 0.97rem;
   color: var(--color-ink);
-  transition: border-color 0.2s ease;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    background-color 0.25s ease;
 }
-.dossier-input::placeholder {
-  color: var(--color-ink-faint);
+.field::placeholder {
+  color: var(--color-ink-soft);
+  opacity: 0.6;
   font-style: italic;
 }
-.dossier-input:focus {
+.field:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-clay) 32%, var(--color-line));
+}
+.field:focus {
   outline: none;
-  border-color: var(--color-ink);
+  background: var(--color-card);
+  border-color: var(--color-clay);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-clay) 12%, transparent);
 }
-.dossier-input:disabled {
-  opacity: 0.5;
+.field:disabled {
+  opacity: 0.55;
 }
 
-.field-label {
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
   font-family: var(--font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-ink-faint);
-}
-
-/* ---- Buttons ---- */
-
-.btn-stamp {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-weight: 600;
-  padding: 0.62rem 1.15rem;
-  background: var(--color-ink);
-  color: var(--color-paper);
-  border: 1px solid var(--color-ink);
-  border-radius: 2px;
-  transition:
-    transform 0.15s ease,
-    background-color 0.15s ease,
-    border-color 0.15s ease;
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+  padding: 0.72rem 1.5rem;
+  border-radius: 999px;
   white-space: nowrap;
+  color: #fdf9f3;
+  background: linear-gradient(165deg, var(--color-clay), var(--color-clay-deep));
+  box-shadow:
+    0 1px 2px rgba(42, 36, 28, 0.12),
+    0 10px 20px -12px color-mix(in srgb, var(--color-clay) 75%, transparent);
+  transition:
+    transform 0.2s cubic-bezier(0.22, 0.68, 0.24, 1),
+    box-shadow 0.25s ease,
+    filter 0.2s ease;
 }
-.btn-stamp:hover:not(:disabled) {
-  background: var(--color-stamp-red);
-  border-color: var(--color-stamp-red);
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: saturate(1.1) brightness(1.05);
+  box-shadow:
+    0 2px 4px rgba(42, 36, 28, 0.14),
+    0 16px 28px -14px color-mix(in srgb, var(--color-clay) 85%, transparent);
 }
-.btn-stamp:active:not(:disabled) {
-  transform: scale(0.96);
+.btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
 }
-.btn-stamp:disabled {
-  opacity: 0.4;
+.btn:disabled {
+  opacity: 0.42;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-.tag-btn {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  padding: 0.32rem 0.7rem;
-  border: 1px dashed var(--color-rule);
-  border-radius: 2px;
+.chip {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-line);
+  background: var(--color-card);
   color: var(--color-ink-soft);
-  background: transparent;
-  transition: all 0.15s ease;
+  transition:
+    transform 0.2s cubic-bezier(0.22, 0.68, 0.24, 1),
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
-.tag-btn:hover:not(:disabled) {
-  border-color: var(--color-ink);
+.chip:hover:not(:disabled) {
+  transform: translateY(-2px);
   color: var(--color-ink);
-  background: var(--color-paper);
+  border-color: color-mix(in srgb, var(--color-clay) 45%, var(--color-line));
+  box-shadow: 0 8px 16px -10px rgba(42, 36, 28, 0.3);
 }
-.tag-btn.is-active {
-  border-style: solid;
-  border-color: var(--color-ink);
-  background: var(--color-ink);
-  color: var(--color-paper);
-}
-.tag-btn:disabled {
+.chip:disabled {
   opacity: 0.4;
 }
 
-/* ---- Folder-tab navigation ---- */
-
-.folder-strip {
-  background: var(--color-folder);
-  border-bottom: 1px solid var(--color-rule);
-}
-
-.folder-tab {
+/* Citation tags stay mono -- they're IDs, and that's worth signalling. */
+.tag {
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 0.6rem 1.1rem;
-  border: 1px solid transparent;
-  border-bottom: none;
-  border-radius: 5px 5px 0 0;
+  letter-spacing: 0.02em;
+  padding: 0.36rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-line);
+  background: var(--color-card);
   color: var(--color-ink-soft);
-  margin-bottom: -1px;
-  transition: all 0.15s ease;
+  transition:
+    transform 0.2s cubic-bezier(0.22, 0.68, 0.24, 1),
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
-.folder-tab.is-active {
-  background: var(--color-paper);
-  border-color: var(--color-rule);
+.tag:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--color-clay) 45%, var(--color-line));
   color: var(--color-ink);
+  box-shadow: 0 8px 16px -10px rgba(42, 36, 28, 0.3);
 }
-.folder-tab:not(.is-active):hover {
-  color: var(--color-ink);
+.tag.is-active {
+  background: linear-gradient(165deg, var(--color-ink), #17130d);
+  border-color: transparent;
+  color: var(--color-shell);
+  box-shadow: 0 10px 20px -12px rgba(42, 36, 28, 0.6);
 }
 
-/* ---- Confidence stamps ---- */
+/* ---------- Tabs ---------- */
+
+.tabs {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.3rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-shell-deep) 75%, transparent);
+  border: 1px solid var(--color-line-soft);
+}
+
+.tab {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  padding: 0.5rem 1.05rem;
+  border-radius: 999px;
+  color: var(--color-ink-soft);
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.tab:hover:not(.is-active) {
+  color: var(--color-ink);
+}
+.tab.is-active {
+  background: var(--color-card);
+  color: var(--color-ink);
+  box-shadow:
+    0 1px 2px rgba(42, 36, 28, 0.06),
+    0 6px 14px -8px rgba(42, 36, 28, 0.3);
+}
+
+/* ---------- Confidence stamps ---------- */
 
 .stamp {
   display: inline-flex;
   align-items: center;
-  gap: 0.32em;
+  gap: 0.4em;
   font-family: var(--font-mono);
   font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-weight: 500;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  padding: 0.3rem 0.7rem;
-  border: 2px solid currentColor;
-  border-radius: 3px;
-  transform: rotate(-4deg);
-  background: color-mix(in srgb, currentColor 10%, transparent);
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  background: color-mix(in srgb, currentColor 9%, var(--color-card));
+  transform: rotate(-3deg);
   white-space: nowrap;
 }
 .stamp-high {
-  color: var(--color-stamp-green);
+  color: var(--color-moss);
 }
 .stamp-medium {
-  color: var(--color-stamp-amber);
+  color: var(--color-honey);
 }
 .stamp-low {
-  color: var(--color-stamp-red);
+  color: var(--color-clay);
 }
 
 .stamp-reject {
   display: inline-block;
   font-family: var(--font-display);
   font-style: italic;
-  font-weight: 700;
-  font-size: 1.15rem;
-  color: var(--color-stamp-red);
-  border: 3px double var(--color-stamp-red);
-  padding: 0.25rem 0.9rem;
-  border-radius: 4px;
-  transform: rotate(-5deg);
-  opacity: 0.85;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--color-clay);
+  border: 2px solid color-mix(in srgb, var(--color-clay) 55%, transparent);
+  padding: 0.3rem 1.1rem;
+  border-radius: 999px;
+  transform: rotate(-3deg);
+  background: color-mix(in srgb, var(--color-clay) 7%, var(--color-card));
 }
 
-/* ---- Ledger tally bars (rating histogram) ---- */
+/* ---------- Rating bars ---------- */
 
-.ledger-track {
-  background: repeating-linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--color-rule) 45%, transparent) 0 2px,
-    transparent 2px 6px
+.bar-track {
+  background: color-mix(in srgb, var(--color-shell-deep) 85%, transparent);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.bar-fill {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-honey) 78%, transparent),
+    var(--color-honey)
   );
-  background-color: color-mix(in srgb, var(--color-paper) 60%, transparent);
-  border: 1px solid var(--color-rule);
-  border-radius: 2px;
+  border-radius: 999px;
+  transition: width 0.7s cubic-bezier(0.22, 0.68, 0.24, 1);
 }
-.ledger-fill {
-  background: var(--color-stamp-amber);
-  border-radius: 1px 0 0 1px;
+
+/* ---------- Pipeline pills ---------- */
+
+.pipe-node {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-line);
+  background: var(--color-card);
+  color: var(--color-ink-soft);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.pipe-node:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -10px rgba(42, 36, 28, 0.32);
+}
+.pipe-node-gate {
+  border-color: color-mix(in srgb, var(--color-honey) 55%, transparent);
+  background: color-mix(in srgb, var(--color-honey) 10%, var(--color-card));
+  color: var(--color-honey);
 }
