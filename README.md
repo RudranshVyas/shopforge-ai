@@ -1,76 +1,67 @@
 # ShopForge AI
 
-Multi-agent RAG over real Amazon product reviews. Ask a question about a product and get a
-citation-backed answer where every quote is verified against the source review — with the
-whole agent pipeline visible in the UI.
+**[Live demo](https://54-206-5-99.sslip.io)**
+
+Ask a question about a product and get an answer built from real Amazon reviews, with every
+claim traced back to the review it came from. Click any citation and it expands to the full
+review with the quoted span highlighted.
 
 Python · FastAPI · LangGraph · FAISS · BM25 · Gemini · React
 
----
+## What makes it different
 
-## Why this exists
+The model never sees a question until retrieval has already run. If the evidence is thin, a
+gate in the pipeline returns a plain answer and the model is skipped entirely. When the model
+does run, it is constrained to a Pydantic schema through Gemini's structured output, and a
+validator then checks every quote it produced against the source review. Quotes that don't
+match get dropped.
 
-Most "AI shopping assistant" demos ask an LLM a question and print whatever comes back.
-This one doesn't trust the model:
-
-- Retrieval runs **before** any LLM call, and a **retrieval-strength gate** blocks the model
-  entirely when the evidence is thin — weak evidence returns a deterministic fallback rather
-  than a confident-sounding guess.
-- The LLM is constrained to a **Pydantic schema** through Gemini native structured output —
-  no JSON fences, no regex parsing.
-- A **Validator agent** fuzzy-matches every quoted span back to its source review. Citations
-  that don't match get dropped; if none survive, the whole answer is replaced by the fallback.
-- The **agent trace** ships in every API response and renders in the UI, so the pipeline's
-  decisions are inspectable rather than asserted.
+The full pipeline trace ships with every response and renders in the UI, so you can see which
+path a question took and why.
 
 ## Architecture
 
 ```
-User query (+ optional parent_asin)
+User query (+ optional product)
     |
     v
 QueryPlanner        rule-based intent + aspect detection (no LLM)
     |
     v
 Retriever           BM25 (rank-bm25) + FAISS (MiniLM, IndexFlatIP)
-    |               merged with Reciprocal Rank Fusion, filtered by parent_asin
+    |               merged with Reciprocal Rank Fusion
     v
-EvidenceSelector    length + generic-text filter, near-duplicate collapse (rapidfuzz),
-    |               aspect preference, rating diversity, helpful_vote tie-break
+EvidenceSelector    dedupe, aspect preference, rating diversity
+    |
     v
 Retrieval-strength gate
-    |-- retrieval_only --> reviews returned verbatim          (no LLM call)
-    |-- weak           --> deterministic fallback             (no LLM call)
+    |-- retrieval_only --> reviews returned as-is          (no LLM call)
+    |-- weak           --> deterministic fallback          (no LLM call)
     `-- strong / mixed --> InsightGenerator (Gemini, structured output)
                               |
                               v
-                          Validator   citation ids, fuzzy quote match >= 85,
+                          Validator   citation ids, fuzzy quote match,
                                       rating correction, confidence cap
     |
     v
-answer + citations + confidence + agent_trace + latency
+answer + citations + confidence + trace
 ```
 
-Built as a LangGraph `StateGraph` over a typed state dict. The gate is a conditional edge
-after `EvidenceSelector`, which is what makes "the LLM is never called on weak evidence" a
-structural property rather than a prompt instruction.
+Built as a LangGraph `StateGraph`. The gate is a conditional edge, so "the LLM is never
+called on weak evidence" holds structurally instead of depending on a prompt.
 
-Design notes worth calling out:
+Two decisions worth noting. Dense and sparse results are merged with Reciprocal Rank Fusion
+(`score = Σ 1 / (60 + rank)`) because BM25 scores and cosine similarities aren't on a
+comparable scale, so summing them directly would be meaningless. And products are keyed on
+`parent_asin` throughout, since Amazon variants share it and keying on `asin` would split one
+product into several.
 
-- **RRF, not weighted sums.** BM25 scores and cosine similarities are on incompatible
-  scales, so the merge uses `score(d) = Σ 1 / (60 + rank_i(d))` over each retriever's ranks.
-- **`parent_asin` is the product key** everywhere, including the API — Amazon variants share
-  it, and joining on `asin` would split one product into many.
-- **Rating mismatches are corrected, not dropped.** A wrong star rating in a citation is a
-  copy error; an unverifiable quote is a fabrication. Only the second one gets dropped.
+## Running it
 
-## Quickstart
-
-The repo ships a small demo corpus **with its prebuilt indexes**, so a fresh clone runs
-without touching Hugging Face.
+A small demo corpus with prebuilt indexes is committed, so a fresh clone works immediately.
 
 ```bash
-cp .env.example .env          # add GEMINI_API_KEY (optional — see below)
+cp .env.example .env          # add your GEMINI_API_KEY
 cd backend
 python -m venv .venv && .venv\Scripts\activate    # macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
@@ -81,59 +72,48 @@ uvicorn app.main:app
 cd frontend && npm install && npm run dev
 ```
 
-Open the Vite URL. Search a product ("wireless charger", "case", "screen protector"), pick
-one, then ask a question.
+Search a product, pick one, ask a question. The app also runs without an API key, using
+retrieval-only queries and the fallback path.
 
-**Without a Gemini key the app still runs** — product search, retrieval-only queries and the
-fallback path all work; only the generated-insight path is skipped.
-
-### Rebuilding the corpus (optional)
+Rebuilding the corpus from scratch is optional:
 
 ```bash
-python scripts/ingest_reviews.py --demo      # ~2k reviews / 50 products -> data/demo/
-python scripts/ingest_reviews.py             # full corpus -> data/processed/
-python scripts/build_index.py --demo         # FAISS + BM25 + id map
+python scripts/ingest_reviews.py --demo    # ~2k reviews / 50 products
+python scripts/ingest_reviews.py           # full corpus
+python scripts/build_index.py --demo       # FAISS + BM25 + id map
 ```
 
-Ingestion streams `McAuley-Lab/Amazon-Reviews-2023` (category
-`Cell_Phones_and_Accessories`) and stops early — the multi-GB category files are never
-downloaded in full.
+Ingestion streams `McAuley-Lab/Amazon-Reviews-2023` and stops early, so the multi-GB category
+files are never downloaded in full.
 
 ## Sample queries
 
-| Query | Path taken |
+| Query | What happens |
 | --- | --- |
-| `Most common complaints?` | complaint mining → Gemini → validated citations |
-| `Is the charging speed good?` | aspect question (`charging`) → Gemini |
-| `Show reviews mentioning overheating` | retrieval only — **never** calls the LLM |
-| `How is the camera lens zoom quality` | no aspect evidence → gate blocks LLM → fallback |
-| `Which one is better built?` (compare mode) | dual retrieval → per-side validated citations |
+| `Most common complaints?` | complaint mining, Gemini, validated citations |
+| `Is the charging speed good?` | aspect question routed on `charging` |
+| `Show reviews mentioning overheating` | retrieval only, no LLM call |
+| `How is the camera lens zoom quality` | no matching evidence, gate blocks the LLM |
+| `Which one is better built?` | compare mode, dual retrieval |
 
 ## Comparing two products
 
-Compare mode retrieves for each product separately and asks for a `ProductComparison`
-schema — a verdict plus strengths, weaknesses and citations per side. Two rules carry over
-from the single-product path and one is new:
-
-- The gate requires evidence on **both** sides; if either is weak, no comparison is generated.
-- Each side's citations are validated against **that product's own evidence**, so a review of
-  product A cannot be used to support a claim about product B. If the model tries it, the
-  citation is dropped — and if nothing survives, the whole comparison falls back.
+Compare mode retrieves for each product separately and returns a verdict with strengths,
+weaknesses and citations per side. Both sides need evidence before a comparison is generated,
+and each side's citations are validated against that product's own reviews, so a review of
+product A can't be used to support a claim about product B.
 
 ## API
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| `POST` | `/api/v1/assistant/query` | main pipeline: answer + citations + agent trace |
-| `POST` | `/api/v1/assistant/compare` | two-product comparison, citations validated per side |
-| `GET` | `/api/v1/products` | most-reviewed products (landing screen) |
+| `POST` | `/api/v1/assistant/query` | answer + citations + trace |
+| `POST` | `/api/v1/assistant/compare` | two-product comparison |
+| `GET` | `/api/v1/products` | most-reviewed products |
 | `GET` | `/api/v1/products/search?q=` | product title search |
 | `GET` | `/api/v1/products/{parent_asin}` | metadata, review count, rating histogram |
-| `GET` | `/api/v1/metrics` | in-memory counters and rates |
+| `GET` | `/api/v1/metrics` | query counts, LLM call rate, citation pass rate |
 | `GET` | `/health` | liveness |
-
-Metrics are counters only: queries, LLM calls, fallbacks, citation pass/drop, and a rolling
-window of the last 100 latencies. Nothing is persisted; there is no token or cost accounting.
 
 ## Tests
 
@@ -141,11 +121,11 @@ window of the last 100 latencies. Nothing is persisted; there is no token or cos
 cd backend && pytest
 ```
 
-Covers retrieval relevance, the validator's drop/correct rules (fabricated `review_id`,
-paraphrased quote, wrong quote, rating mismatch, all-citations-invalid → fallback), and the
-workflow invariants — retrieval-only and weak-evidence queries never reach the LLM, mixed
-retrieval caps confidence at medium, and a trace is present on every path. The Gemini client
-is stubbed, so the suite makes no network calls.
+34 tests covering retrieval relevance, the validator's drop and correct rules (fabricated
+review ids, paraphrased quotes, wrong quotes, rating mismatches), and the workflow invariants:
+retrieval-only and weak-evidence queries never reach the LLM, mixed retrieval caps confidence
+at medium, and a trace is present on every path. The Gemini client is stubbed, so the suite
+runs offline.
 
 ## Layout
 
@@ -154,17 +134,18 @@ backend/
   app/
     agents/       query_planner, retriever, evidence_selector,
                   insight_generator, validator, state, trace
-    workflows/    review_workflow.py     # LangGraph assembly + gate
-    services/     index_store.py (hybrid search), llm.py (Gemini), metrics.py
+    workflows/    review_workflow.py, comparison_workflow.py
+    services/     index_store.py, llm.py, metrics.py
     api/          assistant.py, products.py, metrics.py
-    resources/    aspects.json           # 14 aspects, keyword lists
+    resources/    aspects.json
   scripts/        ingest_reviews.py, build_index.py
   tests/
-data/
-  demo/           committed corpus + prebuilt FAISS/BM25 indexes
-  processed/      full corpus (git-ignored)
-frontend/src/     App + 5 components
+data/demo/        committed corpus + prebuilt indexes
+frontend/src/     App + components
+deploy/           EC2 + nginx setup
 ```
+
+Deployed on AWS EC2 behind nginx. Setup scripts are in `deploy/`.
 
 ## License
 
